@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String         @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  image    String
+  email    String         @unique
+  phone    String
+  password String
+  role     UserRoleEnum   @default(USER)
+  status   UserStatusEnum @default(ACTIVE)
+
+  fcmToken   String?
+  isVerified Boolean  @default(false)
+  // customerId      String?
+  // stripeAccountId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Otp {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  code      String
+  type      OtpTypeEnum // LOGIN, FORGOT_PASSWORD, VERIFY_EMAIL, RESET_PASSWORD, VERIFY_PHONE, VERIFY_USER
+  createdAt DateTime    @default(now())
+  expiresAt DateTime
+
+  @@map("opts")
+}
+
+enum OtpTypeEnum {
+  LOGIN
+  FORGOT_PASSWORD
+  VERIFY_EMAIL
+  RESET_PASSWORD
+  VERIFY_PHONE
+  VERIFY_USER
+}
+
+enum UserRoleEnum {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum UserStatusEnum {
+  DEACTIVATE
+  ACTIVE
+  BLOCKED
+}
