@@ -5,17 +5,91 @@ import { AuthsServices } from './auths.service';
 import catchAsync from '../../helpers/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 
-const createUserIntoDB = catchAsync(async (req: Request, res: Response) => {
-  const body = req.body;
-  const result = await AuthsServices.createUserIntoDB(body);
+const registerUserIntoDB = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthsServices.registerUser(req.body);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Auths created successfully',
+    message: 'User registered successfully. Please check your email to verify.',
+    data: result,
+  });
+});
+
+const loginUserIntoDB = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthsServices.loginUser(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Login successful',
+    data: result,
+  });
+});
+
+const verifyEmailIntoDB = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthsServices.verifyEmail(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message || 'Email verified successfully',
+    data: result,
+  });
+});
+
+const getMyProfile = catchAsync(async (req: Request, res: Response) => {
+  // req.user থেকে আসবে (auth middleware দিয়ে)
+  const result = await AuthsServices.getMe(req.user.userId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Profile retrieved successfully',
+    data: result,
+  });
+});
+
+const forgotPasswordIntoDB = catchAsync(async (req: Request, res: Response) => {
+  await AuthsServices.forgotPassword(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'If email exists, reset OTP has been sent',
+  });
+});
+
+const resetPasswordIntoDB = catchAsync(async (req: Request, res: Response) => {
+  await AuthsServices.resetPassword(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Password reset successful',
+  });
+});
+
+const changePasswordIntoDB = catchAsync(async (req: Request, res: Response) => {
+  await AuthsServices.changePassword(req.user.userId, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Password changed successfully',
+  });
+});
+
+const refreshTokenIntoDB = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthsServices.refreshToken(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Token refreshed',
     data: result,
   });
 });
 
 export const AuthsControllers = {
-  createUserIntoDB,
+  registerUserIntoDB,
+  loginUserIntoDB,
+  verifyEmailIntoDB,
+  getMyProfile,
+  forgotPasswordIntoDB,
+  resetPasswordIntoDB,
+  changePasswordIntoDB,
+  refreshTokenIntoDB,
 };

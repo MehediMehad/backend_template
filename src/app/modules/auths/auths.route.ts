@@ -10,11 +10,57 @@ const router = Router();
 
 router.post(
   '/register',
-  fileUploader.uploadFields,
+  fileUploader.uploadFields, // multipart/form-data → image upload
   validateRequest(AuthsValidations.registerSchema, {
-    image: 'single',
+    image: 'single', // field name = 'image', single file
   }),
-  AuthsControllers.createUserIntoDB,
+  AuthsControllers.registerUserIntoDB,
 );
+
+router.post(
+  '/login',
+  validateRequest(AuthsValidations.loginSchema),
+  AuthsControllers.loginUserIntoDB,
+);
+
+router.post(
+  '/forgot-password',
+  validateRequest(AuthsValidations.forgotPasswordSchema),
+  AuthsControllers.forgotPasswordIntoDB,
+);
+
+router.post(
+  '/reset-password',
+  validateRequest(AuthsValidations.resetPasswordSchema),
+  AuthsControllers.resetPasswordIntoDB,
+);
+
+router.post(
+  '/refresh-token',
+  validateRequest(AuthsValidations.refreshTokenSchema),
+  AuthsControllers.refreshTokenIntoDB,
+);
+
+router.get('/me', auth('USER', 'ADMIN', 'MODERATOR'), AuthsControllers.getMyProfile);
+
+router.post(
+  '/change-password',
+  auth('ADMIN', 'MODERATOR', 'USER'),
+  validateRequest(AuthsValidations.changePasswordSchema),
+  AuthsControllers.changePasswordIntoDB,
+);
+
+router.post(
+  '/verify',
+  validateRequest(AuthsValidations.verifySchema),
+  AuthsControllers.verifyEmailIntoDB,
+);
+
+// // Optional: Logout (if you want to implement token blacklisting)
+// router.post(
+//   '/logout',
+//   auth(),
+//   AuthsControllers.logout,                // you'll need to add this later
+// );
 
 export const AuthsRoutes = router;

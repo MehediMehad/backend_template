@@ -1,12 +1,18 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import type { JwtPayload } from 'jsonwebtoken';
 
-import type { TAuthPayload } from '../helpers/jwtHelpers';
+import type { TAccessTokenPayload } from '../helpers/authHelpers';
 
 declare global {
   namespace Express {
     interface Request {
-      user: JwtPayload & TAuthPayload;
+      user: JwtPayload & TAccessTokenPayload;
+    }
+    interface ProcessEnv {
+      JWT_ACCESS_SECRET: string;
+      JWT_REFRESH_SECRET: string;
+      JWT_ACCESS_EXPIRES_IN: string;
+      JWT_REFRESH_EXPIRES_IN: string;
     }
   }
 }
