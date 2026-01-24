@@ -15,7 +15,7 @@ model User {
   phone    String
   password String
   role     UserRoleEnum   @default(USER)
-  status   UserStatusEnum @default(ACTIVE)
+  status   UserStatusEnum @default(DEACTIVATE)
 
   fcmToken   String?
   isVerified Boolean  @default(false)
@@ -31,10 +31,12 @@ model Otp {
   id        String      @id @default(auto()) @map("_id") @db.ObjectId
   email     String
   code      String
-  type      OtpTypeEnum // LOGIN, FORGOT_PASSWORD, VERIFY_EMAIL, RESET_PASSWORD, VERIFY_PHONE, VERIFY_USER
+  type      OtpTypeEnum //  VERIFY_EMAIL, RESET_PASSWORD, VERIFY_PHONE,
   createdAt DateTime    @default(now())
   expiresAt DateTime
 
+  @@unique([email, code, type])
+  @@index([email, type])
   @@map("opts")
 }
 

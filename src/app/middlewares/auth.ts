@@ -6,13 +6,15 @@ import type { JwtPayload, Secret } from 'jsonwebtoken';
 
 import authConfig from '../configs/auth.config';
 import ApiError from '../errors/ApiError';
-import type { TAuthPayload } from '../helpers/jwtHelpers';
-import { jwtHelpers } from '../helpers/jwtHelpers';
+// import type { TAuthPayload } from '../helpers/jwtHelpers';
+// import { jwtHelpers } from '../helpers/jwtHelpers';
+import type { TAccessTokenPayload } from '../helpers/authHelpers';
+import { authHelpers } from '../helpers/authHelpers';
 import prisma from '../libs/prisma';
 
 const auth =
   (...roles: UserRoleEnum[]) =>
-  async (req: Request & { user?: TAuthPayload }, _res: Response, next: NextFunction) => {
+  async (req: Request & { user?: TAccessTokenPayload }, _res: Response, next: NextFunction) => {
     try {
       const token = req.headers.authorization?.split(' ')[1];
 
@@ -20,16 +22,16 @@ const auth =
         throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
       }
 
-      const verifiedUser = jwtHelpers.verifyToken(token, authConfig.jwt.access_secret as Secret);
+      const verifiedUser = authHelpers.verifyAccessToken(token);
 
       if (!verifiedUser?.email) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
       }
-      const { id } = verifiedUser;
+      const { userId } = verifiedUser;
 
       const user = await prisma.user.findUnique({
         where: {
-          id,
+          id: userId,
         },
       });
       if (!user) {
@@ -44,15 +46,16 @@ const auth =
         throw new ApiError(httpStatus.FORBIDDEN, 'Your account is not Activate!');
       }
 
-      if (user.isDeleted) {
-        throw new ApiError(httpStatus.FORBIDDEN, 'Your account is deleted!');
+      // if (user.isDeleted) {
+      //   throw new ApiError(httpStatus.FORBIDDEN, 'Your account is deleted!');
+      // }
+
+      req.user = verifiedUser as JwtPayload & TAccessTokenPayload;
+
+      if (roles.length && !roles.includes(user.role)) {
+        throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
       }
 
-      req.user = verifiedUser as JwtPayload & TAuthPayload;
-
-      if (roles.length && !roles.includes(verifiedUser.role)) {
-        throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden!');
-      }
       next();
     } catch (err) {
       next(err);

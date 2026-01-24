@@ -31,12 +31,11 @@ const verifyEmailIntoDB = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: result.message || 'Email verified successfully',
-    data: result,
+    data: result.result,
   });
 });
 
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {
-  // req.user থেকে আসবে (auth middleware দিয়ে)
   const result = await AuthsServices.getMe(req.user.userId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -47,11 +46,12 @@ const getMyProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const forgotPasswordIntoDB = catchAsync(async (req: Request, res: Response) => {
-  await AuthsServices.forgotPassword(req.body);
+  const result = await AuthsServices.forgotPassword(req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'If email exists, reset OTP has been sent',
+    message: result.message || 'Password reset email sent successfully',
+    data: result.message,
   });
 });
 
