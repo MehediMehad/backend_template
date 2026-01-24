@@ -6,6 +6,7 @@ import auth from '../../middlewares/auth';
 import { fileUploader } from '../../middlewares/s3MulterMiddleware';
 import validateRequest from '../../middlewares/validateRequest';
 
+// TODO: RESEND OTP
 const router = Router();
 
 router.post(
@@ -54,6 +55,13 @@ router.post(
   '/verify',
   validateRequest(AuthsValidations.verifySchema),
   AuthsControllers.verifyEmailIntoDB,
+);
+
+router.post(
+  '/resend-otp',
+  // resendOtpLimiter,
+  validateRequest(AuthsValidations.resendOtpSchema),
+  AuthsControllers.resendOtpIntoDB,
 );
 
 // // Optional: Logout (if you want to implement token blacklisting)

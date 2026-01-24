@@ -83,6 +83,15 @@ const refreshTokenIntoDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const resendOtpIntoDB = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthsServices.resendOtp(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result.message,
+  });
+});
+
 export const AuthsControllers = {
   registerUserIntoDB,
   loginUserIntoDB,
@@ -92,4 +101,5 @@ export const AuthsControllers = {
   resetPasswordIntoDB,
   changePasswordIntoDB,
   refreshTokenIntoDB,
+  resendOtpIntoDB,
 };

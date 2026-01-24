@@ -55,6 +55,11 @@ export const verifySchema = z.object({
   type: z.nativeEnum(OtpTypeEnum).default(OtpTypeEnum.VERIFY_EMAIL),
 });
 
+export const resendOtpSchema = z.object({
+  email: z.string().email().trim().toLowerCase(),
+  type: z.nativeEnum(OtpTypeEnum),
+});
+
 export const AuthsValidations = {
   registerSchema,
   loginSchema,
@@ -63,4 +68,5 @@ export const AuthsValidations = {
   changePasswordSchema,
   refreshTokenSchema,
   verifySchema,
+  resendOtpSchema,
 };

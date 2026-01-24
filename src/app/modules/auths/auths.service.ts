@@ -12,6 +12,7 @@ import type {
   TResetPasswordPayload,
   TRefreshTokenPayload,
   TVerifyPayload,
+  TResendOtpPayload,
 } from './auths.interface';
 import config from '../../configs';
 import ApiError from '../../errors/ApiError';
@@ -347,6 +348,51 @@ const refreshToken = async (payload: TRefreshTokenPayload) => {
   return { accessToken: newAccessToken };
 };
 
+const resendOtp = async (payload: TResendOtpPayload) => {
+  const user = await prisma.user.findUnique({
+    where: { email: payload.email },
+  });
+
+  // if (!user) {
+  //   // Security: user না থাকলেও success message দাও (enumeration prevent)
+  //   return { message: 'If the email exists, a new OTP has been sent.' };
+  // }
+
+  if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+
+  // If user already verified
+  if (payload.type === 'VERIFY_EMAIL' && user.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email is already verified');
+  }
+
+  const { otp, expiresAt } = generateHelpers.generateOTP(6, 10);
+
+  await prisma.otp.create({
+    data: {
+      code: otp,
+      email: payload.email,
+      type: payload.type,
+      expiresAt,
+    },
+  });
+
+  // async email send
+  setImmediate(async () => {
+    try {
+      const html =
+        payload.type === 'VERIFY_EMAIL'
+          ? SignUpVerificationHtml('Verify Your Email', otp)
+          : ForgotPasswordHtml('Reset Your Password', otp);
+
+      await sentEmailUtility(payload.email, 'Your Verification Code', html);
+    } catch (err) {
+      console.error('Resend OTP email failed:', err);
+    }
+  });
+
+  return { message: 'A new OTP has been sent to your email.' };
+};
+
 export const AuthsServices = {
   registerUser,
   loginUser,
@@ -356,4 +402,5 @@ export const AuthsServices = {
   changePassword,
   getMe,
   refreshToken,
+  resendOtp,
 };
