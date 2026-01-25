@@ -17,12 +17,13 @@ model User {
   role     UserRoleEnum   @default(USER)
   status   UserStatusEnum @default(DEACTIVATE)
 
-  fcmToken   String?
-  isVerified Boolean  @default(false)
+  fcmToken    String?
+  isVerified  Boolean   @default(false)
   // customerId      String?
   // stripeAccountId String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@map("users")
 }

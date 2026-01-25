@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { UserStatusEnum, type Prisma } from '@prisma/client';
 import { compare } from 'bcrypt';
 import httpStatus from 'http-status';
 import type { JwtPayload } from 'jsonwebtoken';
@@ -69,17 +69,12 @@ const registerUser = async (payload: TRegisterPayload) => {
       });
 
       // Send email in a separate thread
-      setImmediate(async () => {
-        try {
-          await sentEmailUtility(
-            user.email,
-            'Verify Your Email',
-            SignUpVerificationHtml('Verify Your Email', createOTP.code),
-          );
-        } catch (err) {
-          console.error('Email sending failed:', err);
-        }
-      });
+      void sentEmailUtility(
+        user.email,
+        'Verify Your Email',
+        SignUpVerificationHtml('Verify Your Email', createOTP.code),
+      );
+
 
       const { password: _, ...userResponse } = user;
 
@@ -100,6 +95,8 @@ const loginUser = async (payload: TLoginPayload) => {
 
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
+  if (!user.isVerified) throw new ApiError(httpStatus.FORBIDDEN, 'Please verify your email first');
+
   if (user.status !== 'ACTIVE')
     throw new ApiError(httpStatus.FORBIDDEN, `Account is ${user.status.toLowerCase()}`);
 
@@ -107,14 +104,11 @@ const loginUser = async (payload: TLoginPayload) => {
 
   if (!isPasswordMatch) throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid password');
 
-  if (!user.isVerified) throw new ApiError(httpStatus.FORBIDDEN, 'Please verify your email first');
 
-  if (payload.fcmToken) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { fcmToken: payload.fcmToken },
-    });
-  }
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { fcmToken: payload.fcmToken, lastLoginAt: new Date() },
+  });
 
   const accessToken = authHelpers.createAccessToken({
     userId: user.id,
@@ -132,7 +126,7 @@ const loginUser = async (payload: TLoginPayload) => {
   return {
     accessToken,
     refreshToken,
-    user: userData,
+    ...userData,
   };
 };
 
@@ -174,7 +168,7 @@ const verifyEmail = async (payload: TVerifyPayload) => {
       // 1. Verify email
       const user = await tx.user.update({
         where: { email: payload.email },
-        data: { isVerified: true },
+        data: { isVerified: true, status: UserStatusEnum.ACTIVE },
         select: { id: true, name: true, email: true, role: true, isVerified: true },
       });
 
@@ -208,7 +202,7 @@ const verifyEmail = async (payload: TVerifyPayload) => {
   return {
     message: `${payload.type.toLowerCase()} verified successfully`,
     result: {
-      user: updatedUser,
+      ...updatedUser,
       accessToken,
       refreshToken,
     },
@@ -238,18 +232,12 @@ const forgotPassword = async (payload: TForgotPasswordPayload) => {
     },
   });
 
-  // async email
-  setImmediate(async () => {
-    try {
-      await sentEmailUtility(
-        payload.email,
-        'Reset Your Password',
-        ForgotPasswordHtml('Reset Password', otp),
-      );
-    } catch (err) {
-      console.error('Reset password email failed:', err);
-    }
-  });
+  // async email send
+  void sentEmailUtility(
+    payload.email,
+    'Reset Your Password',
+    ForgotPasswordHtml('Reset Password', otp),
+  );
 
   return {
     message: 'Reset password code has been sent to your email',
@@ -360,11 +348,6 @@ const resendOtp = async (payload: TResendOtpPayload) => {
 
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  // If user already verified
-  if (payload.type === 'VERIFY_EMAIL' && user.isVerified) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Email is already verified');
-  }
-
   const { otp, expiresAt } = generateHelpers.generateOTP(6, 10);
 
   await prisma.otp.create({
@@ -377,18 +360,13 @@ const resendOtp = async (payload: TResendOtpPayload) => {
   });
 
   // async email send
-  setImmediate(async () => {
-    try {
-      const html =
-        payload.type === 'VERIFY_EMAIL'
-          ? SignUpVerificationHtml('Verify Your Email', otp)
-          : ForgotPasswordHtml('Reset Your Password', otp);
+  const html =
+    payload.type === 'VERIFY_EMAIL'
+      ? SignUpVerificationHtml('Verify Your Email', otp)
+      : ForgotPasswordHtml('Reset Your Password', otp);
 
-      await sentEmailUtility(payload.email, 'Your Verification Code', html);
-    } catch (err) {
-      console.error('Resend OTP email failed:', err);
-    }
-  });
+  void sentEmailUtility(payload.email, 'Your Verification Code', html);
+
 
   return { message: 'A new OTP has been sent to your email.' };
 };

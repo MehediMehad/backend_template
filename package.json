@@ -1,5 +1,5 @@
 {
-  "name": "gosilva",
+  "name": "backend_template",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "generate:module": "node scripts/generateModule.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "mehedihasanmehad",
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.36.0",
