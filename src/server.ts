@@ -3,9 +3,9 @@ import type { Server as HttpServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
 import app from './app';
-import appConfig from './app/configs/app.config';
 import seedSuperAdmin from './app/helpers/db/seedSuperAdmin';
 import { getLocalIP } from './app/helpers/devHelpers';
+import config from './configs';
 // import { initializeSocket } from './app/modules/chat/chat.socket';
 
 let server: HttpServer;
@@ -14,7 +14,7 @@ let io: SocketIOServer;
 async function main() {
   try {
     // 🟢 Start the server
-    const port = appConfig.port || 5000;
+    const port = config.app.port || 5000;
     server = app.listen(port, async () => {
       console.log(`🚀 Server is running on port ${port}`);
       await seedSuperAdmin(); // Seed Super Admin user on startup

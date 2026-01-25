@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
-import emailConfig from '../../configs/email.config';
 import { getEnvVar } from '../../helpers/getEnvVar';
+import config from '../../../configs';
 
 export const sentEmailUtility = async (
   emailTo: string,
@@ -21,7 +21,7 @@ export const sentEmailUtility = async (
   await transporter.verify(); // 🔍 debug helper
 
   const mailOptions = {
-    from: emailConfig.email,
+    from: config.mail.email,
     to: emailTo,
     subject: EmailSubject,
     html: EmailHTML,
