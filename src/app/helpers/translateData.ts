@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import config from '../configs';
+import config from '../../configs';
 
 type TranslateOptions = {
   targetLang: string; // ex: 'en'
@@ -19,6 +19,7 @@ const DEFAULT_EXCLUDE_KEYS = [
   'updatedAt',
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const translateData = async (data: any, options: TranslateOptions): Promise<any> => {
   const { targetLang, excludeKeys = [] } = options;
 
@@ -33,7 +34,7 @@ export const translateData = async (data: any, options: TranslateOptions): Promi
         params: {
           q: data,
           target: targetLang,
-          key: config.Google.google_translate_api_key, // 👈 Replace with your own API key
+          key: config.google.translate_api_key, // 👈 Replace with your own API key
         },
       },
     );
@@ -53,7 +54,7 @@ export const translateData = async (data: any, options: TranslateOptions): Promi
 
   // Object
   if (typeof data === 'object' && data !== null) {
-    const translatedObj: Record<string, any> = {};
+    const translatedObj: Record<string, any> = {}; // eslint-disable-line
 
     for (const key of Object.keys(data)) {
       // ❌ Will not translate if key is excluded

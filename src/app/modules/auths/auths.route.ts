@@ -42,10 +42,7 @@ router.post(
   AuthsControllers.resetPasswordIntoDB,
 );
 
-router.post(
-  '/refresh-token',
-  AuthsControllers.refreshTokenIntoDB,
-);
+router.post('/refresh-token', AuthsControllers.refreshTokenIntoDB);
 
 router.get('/me', auth('USER', 'ADMIN', 'MODERATOR'), AuthsControllers.getMyProfile);
 

@@ -2,9 +2,8 @@ import type { UserRoleEnum } from '@prisma/client';
 import { UserStatusEnum } from '@prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
-import type { JwtPayload, Secret } from 'jsonwebtoken';
+import type { JwtPayload } from 'jsonwebtoken';
 
-import authConfig from '../configs/auth.config';
 import ApiError from '../errors/ApiError';
 // import type { TAuthPayload } from '../helpers/jwtHelpers';
 // import { jwtHelpers } from '../helpers/jwtHelpers';

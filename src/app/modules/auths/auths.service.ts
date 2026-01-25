@@ -13,7 +13,7 @@ import type {
   TVerifyPayload,
   TResendOtpPayload,
 } from './auths.interface';
-import config from '../../configs';
+import config from '../../../configs';
 import ApiError from '../../errors/ApiError';
 import { authHelpers } from '../../helpers/authHelpers';
 import { generateHelpers } from '../../helpers/generateHelpers';
@@ -317,7 +317,7 @@ const getMe = async (userId: string) => {
 
 const refreshToken = async (refreshToken: string) => {
   // Verify
-  const decoded = verify(refreshToken, config.auth.jwt.refresh_secret) as JwtPayload;
+  const decoded = verify(refreshToken, config.jwt.refresh_secret) as JwtPayload;
 
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },

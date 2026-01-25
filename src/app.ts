@@ -1,16 +1,16 @@
 import path from 'path';
 
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import type { Application, NextFunction, Request, Response } from 'express';
 import express from 'express';
 import httpStatus from 'http-status';
 import morgan from 'morgan';
 import cron from 'node-cron';
-import cookieParser from 'cookie-parser';
 
 import globalErrorHandler from './app/errors/globalErrorHandler';
 import { getEnvVar } from './app/helpers/getEnvVar';
-import router from './app/routes';
+import router from './routes';
 
 // 🔑 Environment Variables
 const NODE_ENV = getEnvVar('NODE_ENV');

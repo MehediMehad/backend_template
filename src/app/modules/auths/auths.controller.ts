@@ -100,7 +100,6 @@ const refreshTokenIntoDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 const resendOtpIntoDB = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthsServices.resendOtp(req.body);
   sendResponse(res, {

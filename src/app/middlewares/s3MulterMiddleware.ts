@@ -1,13 +1,13 @@
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 
-import config from '../configs/index';
-import { s3Client } from '../configs/s3Client';
+import config from '../../configs';
+import { s3Client } from '../libs/s3Client';
 
 // Create multer storage for DigitalOcean Spaces
 const s3Storage = multerS3({
   s3: s3Client,
-  bucket: config.S3.bucketName || '',
+  bucket: config.s3.bucket || '',
   // acl: 'public-read', // Ensure files are publicly accessible
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (_req, file, cb) => {

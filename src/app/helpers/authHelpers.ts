@@ -23,7 +23,7 @@ import httpStatus from 'http-status';
 import type { SignOptions } from 'jsonwebtoken';
 import { sign, verify } from 'jsonwebtoken';
 
-import config from '../configs';
+import config from '../../configs';
 import ApiError from '../errors/ApiError';
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
@@ -68,6 +68,7 @@ const verifyAccessToken = (token: string): TAccessTokenPayload => {
   try {
     return verify(token, JWT_ACCESS_SECRET) as TAccessTokenPayload;
   } catch (error) {
+    console.error('Error verifying access token:', error);
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid or expired access token');
   }
 };
@@ -76,13 +77,14 @@ const verifyRefreshToken = (token: string): RefreshTokenPayload => {
   try {
     return verify(token, JWT_REFRESH_SECRET) as RefreshTokenPayload;
   } catch (error) {
+    console.error('Error verifying refresh token:', error);
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid or expired refresh token');
   }
 };
 
 // Hash password
 const hashPassword = async (password: string): Promise<string> => {
-  const saltRounds = config.auth.bcrypt_salt_rounds; // Salt rounds
+  const saltRounds = config.jwt.bcrypt_salt_rounds; // Salt rounds
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   return hashedPassword;
 };

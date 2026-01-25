@@ -1,9 +1,9 @@
 import type { Prisma } from '@prisma/client';
 import { UserRoleEnum, UserStatusEnum } from '@prisma/client';
 
-import authConfig from '../../configs/auth.config';
 import prisma from '../../libs/prisma';
 import { authHelpers } from '../authHelpers';
+import config from '../../../configs';
 
 const seedSuperAdmin = async () => {
   try {
@@ -17,13 +17,13 @@ const seedSuperAdmin = async () => {
       console.log('⚠️  Super Admin already exists.');
       return;
     }
-    const hashedPassword = await authHelpers.hashPassword(authConfig.super_admin_password);
+    const hashedPassword = await authHelpers.hashPassword(config.admin.password);
 
     const superAdminData: Prisma.UserCreateInput = {
       name: 'Super Admin',
       image: '00000000',
       password: hashedPassword,
-      email: authConfig.super_admin_email,
+      email: config.admin.email,
       phone: '000000000',
       role: UserRoleEnum.ADMIN,
       status: UserStatusEnum.ACTIVE,
