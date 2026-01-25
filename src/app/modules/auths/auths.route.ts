@@ -44,7 +44,6 @@ router.post(
 
 router.post(
   '/refresh-token',
-  validateRequest(AuthsValidations.refreshTokenSchema),
   AuthsControllers.refreshTokenIntoDB,
 );
 

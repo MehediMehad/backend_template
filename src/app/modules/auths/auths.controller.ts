@@ -85,16 +85,12 @@ const changePasswordIntoDB = catchAsync(async (req: Request, res: Response) => {
 });
 
 const refreshTokenIntoDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthsServices.refreshToken(req.body);
+  const { refreshToken } = req.cookies;
 
-  // // TODO: use cookie for refresh token
-  // const refreshToken = req.cookies.refreshToken;
-
-  // if (!refreshToken) {
-  //   throw new ApiError(httpStatus.UNAUTHORIZED, 'No refresh token provided');
-  // }
-
-  // const result = await AuthsServices.refreshToken({ refreshToken });
+  if (!refreshToken) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'No refresh token provided');
+  }
+  const result = await AuthsServices.refreshToken(refreshToken);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -103,6 +99,7 @@ const refreshTokenIntoDB = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 
 const resendOtpIntoDB = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthsServices.resendOtp(req.body);

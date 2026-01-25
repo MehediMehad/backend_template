@@ -6,7 +6,6 @@ import type {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
-  refreshTokenSchema,
   verifySchema,
   resendOtpSchema,
 } from './auths.validation';
@@ -16,6 +15,5 @@ export type TLoginPayload = z.infer<typeof loginSchema>;
 export type TForgotPasswordPayload = z.infer<typeof forgotPasswordSchema>;
 export type TResetPasswordPayload = z.infer<typeof resetPasswordSchema>;
 export type TChangePasswordPayload = z.infer<typeof changePasswordSchema>;
-export type TRefreshTokenPayload = z.infer<typeof refreshTokenSchema>;
 export type TVerifyPayload = z.infer<typeof verifySchema>;
 export type TResendOtpPayload = z.infer<typeof resendOtpSchema>;

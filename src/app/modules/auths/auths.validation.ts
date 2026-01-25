@@ -45,10 +45,6 @@ export const changePasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(10, 'Refresh token is required'),
-});
-
 export const verifySchema = z.object({
   email: z.string().email().trim().toLowerCase(),
   code: z.string().length(6, 'OTP must be 6 digits'),
@@ -66,7 +62,6 @@ export const AuthsValidations = {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
-  refreshTokenSchema,
   verifySchema,
   resendOtpSchema,
 };

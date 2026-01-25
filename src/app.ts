@@ -6,6 +6,7 @@ import express from 'express';
 import httpStatus from 'http-status';
 import morgan from 'morgan';
 import cron from 'node-cron';
+import cookieParser from 'cookie-parser';
 
 import globalErrorHandler from './app/errors/globalErrorHandler';
 import { getEnvVar } from './app/helpers/getEnvVar';
@@ -26,6 +27,7 @@ if (NODE_ENV === 'development') {
 
 // 📁 Static Files For CSS
 app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(cookieParser());
 
 // 🚀 Cron Job Every 30 Minutes
 cron.schedule('*/30 * * * *', () => {

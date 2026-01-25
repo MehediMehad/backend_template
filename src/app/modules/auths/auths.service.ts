@@ -10,7 +10,6 @@ import type {
   TChangePasswordPayload,
   TForgotPasswordPayload,
   TResetPasswordPayload,
-  TRefreshTokenPayload,
   TVerifyPayload,
   TResendOtpPayload,
 } from './auths.interface';
@@ -316,8 +315,9 @@ const getMe = async (userId: string) => {
   return user;
 };
 
-const refreshToken = async (payload: TRefreshTokenPayload) => {
-  const decoded = verify(payload.refreshToken, config.auth.jwt.refresh_secret) as JwtPayload;
+const refreshToken = async (refreshToken: string) => {
+  // Verify
+  const decoded = verify(refreshToken, config.auth.jwt.refresh_secret) as JwtPayload;
 
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
