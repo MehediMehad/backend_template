@@ -25,7 +25,51 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Chat Relations
+  chatRooms      ChatRoom[] @relation("ChatRoomUsers", fields: [chatRoomIds], references: [id])
+  chatRoomIds    String[]   @db.ObjectId
+  messagesSent   Message[]  @relation("sender")
+  adminChatRooms ChatRoom[] @relation("admin")
+
   @@map("users")
+}
+
+// Chat Models
+model ChatRoom {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  users     User[]       @relation("ChatRoomUsers", fields: [userIds], references: [id])
+  userIds   String[]     @db.ObjectId
+  messages  Message[]
+  type      ChatRoomType @default(PRIVATE)
+  name      String?
+  adminId   String?      @db.ObjectId
+  admin     User?        @relation("admin", fields: [adminId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("chat_rooms")
+}
+
+model Message {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatRoomId String   @db.ObjectId
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  senderId   String   @db.ObjectId
+  sender     User     @relation("sender", fields: [senderId], references: [id])
+  content    String?
+  images     String[]
+  isRead     Boolean  @default(false)
+  readBy     String[] @db.ObjectId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([chatRoomId, senderId])
+  @@map("messages")
+}
+
+enum ChatRoomType {
+  PRIVATE
+  GROUP
 }
 
 model Otp {
@@ -37,10 +81,11 @@ model Otp {
   expiresAt DateTime
 
   @@unique([email, code, type])
-  @@index([email, type])
+  @@index([email, type, expiresAt])
   @@map("opts")
 }
 
+// Enums
 enum OtpTypeEnum {
   LOGIN
   FORGOT_PASSWORD
