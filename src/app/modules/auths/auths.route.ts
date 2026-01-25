@@ -3,11 +3,14 @@ import { Router } from 'express';
 import { AuthsControllers } from './auths.controller';
 import { AuthsValidations } from './auths.validation';
 import auth from '../../middlewares/auth';
+import {
+  forgotPasswordLimiter,
+  loginLimiter,
+  resendOtpLimiter,
+} from '../../middlewares/rateLimiter';
 import { fileUploader } from '../../middlewares/s3MulterMiddleware';
 import validateRequest from '../../middlewares/validateRequest';
-import { forgotPasswordLimiter, loginLimiter, resendOtpLimiter } from '../../middlewares/rateLimiter';
 
-// TODO: RESEND OTP
 const router = Router();
 
 router.post(

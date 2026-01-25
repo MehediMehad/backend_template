@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import httpStatus from 'http-status';
 
 import { AuthsServices } from './auths.service';
+import ApiError from '../../errors/ApiError';
 import catchAsync from '../../helpers/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 
@@ -17,6 +18,16 @@ const registerUserIntoDB = catchAsync(async (req: Request, res: Response) => {
 
 const loginUserIntoDB = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthsServices.loginUser(req.body);
+
+  // Set refresh token in cookie
+  res.cookie('refreshToken', result.refreshToken, {
+    httpOnly: true, // JS access নেই
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    sameSite: 'strict', // CSRF protect
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: '/',
+  });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -75,6 +86,16 @@ const changePasswordIntoDB = catchAsync(async (req: Request, res: Response) => {
 
 const refreshTokenIntoDB = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthsServices.refreshToken(req.body);
+
+  // // TODO: use cookie for refresh token
+  // const refreshToken = req.cookies.refreshToken;
+
+  // if (!refreshToken) {
+  //   throw new ApiError(httpStatus.UNAUTHORIZED, 'No refresh token provided');
+  // }
+
+  // const result = await AuthsServices.refreshToken({ refreshToken });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
