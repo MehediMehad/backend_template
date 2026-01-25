@@ -5,6 +5,7 @@ import { AuthsValidations } from './auths.validation';
 import auth from '../../middlewares/auth';
 import { fileUploader } from '../../middlewares/s3MulterMiddleware';
 import validateRequest from '../../middlewares/validateRequest';
+import { forgotPasswordLimiter, loginLimiter, resendOtpLimiter } from '../../middlewares/rateLimiter';
 
 // TODO: RESEND OTP
 const router = Router();
@@ -20,12 +21,14 @@ router.post(
 
 router.post(
   '/login',
+  loginLimiter,
   validateRequest(AuthsValidations.loginSchema),
   AuthsControllers.loginUserIntoDB,
 );
 
 router.post(
   '/forgot-password',
+  forgotPasswordLimiter,
   validateRequest(AuthsValidations.forgotPasswordSchema),
   AuthsControllers.forgotPasswordIntoDB,
 );
@@ -59,7 +62,7 @@ router.post(
 
 router.post(
   '/resend-otp',
-  // resendOtpLimiter,
+  resendOtpLimiter,
   validateRequest(AuthsValidations.resendOtpSchema),
   AuthsControllers.resendOtpIntoDB,
 );

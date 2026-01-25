@@ -75,7 +75,6 @@ const registerUser = async (payload: TRegisterPayload) => {
         SignUpVerificationHtml('Verify Your Email', createOTP.code),
       );
 
-
       const { password: _, ...userResponse } = user;
 
       return userResponse;
@@ -103,7 +102,6 @@ const loginUser = async (payload: TLoginPayload) => {
   const isPasswordMatch = await compare(payload.password, user.password);
 
   if (!isPasswordMatch) throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid password');
-
 
   await prisma.user.update({
     where: { id: user.id },
@@ -366,7 +364,6 @@ const resendOtp = async (payload: TResendOtpPayload) => {
       : ForgotPasswordHtml('Reset Your Password', otp);
 
   void sentEmailUtility(payload.email, 'Your Verification Code', html);
-
 
   return { message: 'A new OTP has been sent to your email.' };
 };
