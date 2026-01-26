@@ -1,6 +1,6 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { s3Client } from '../libs/s3Client';
 
-import { s3Client } from '../configs/s3Client';
 
 const deleteS3Image = async (imagePath: string) => {
   if (!imagePath) {
