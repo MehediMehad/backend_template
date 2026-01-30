@@ -17,10 +17,8 @@ model User {
   role     UserRoleEnum   @default(USER)
   status   UserStatusEnum @default(DEACTIVATE)
 
-  fcmToken    String?
+  fcmTokens   String[] // Push 🔔 multiple device support
   isVerified  Boolean   @default(false)
-  // customerId      String?
-  // stripeAccountId String?
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -31,6 +29,7 @@ model User {
   messagesSent   Message[]  @relation("sender")
   adminChatRooms ChatRoom[] @relation("admin")
 
+  // Notification Relations
   notificationsSent     Notification[] @relation("sender")
   notificationsReceived Notification[] @relation("receiver")
 
@@ -38,24 +37,35 @@ model User {
 }
 
 model Notification {
-  id         String               @id @default(auto()) @map("_id") @db.ObjectId
-  senderId   String?              @db.ObjectId
-  sender     User?                @relation("sender", fields: [senderId], references: [id])
-  receiverId String               @db.ObjectId
-  receiver   User                 @relation("receiver", fields: [receiverId], references: [id])
-  title      String
-  body       String
-  type       NotificationTypeEnum @default(NOTIFY) // MESSAGE , FRIEND_REQUEST, SYSTEM_ALERT, NOTIFY
-  isRead     Boolean              @default(false)
-  createdAt  DateTime             @default(now())
+  id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  @@index([senderId, isRead])
+  // Who sent the notification (null = system)
+  senderId String? @db.ObjectId
+  sender   User?   @relation("sender", fields: [senderId], references: [id])
+
+  // Who received the notification
+  receiverId String @db.ObjectId
+  receiver   User   @relation("receiver", fields: [receiverId], references: [id])
+
+  // Content
+  title String
+  body  String
+  data  Json? // Additional data payload
+
+  // 🔥 Generic Type
+  type NotificationTypeEnum @default(NOTIFY) // MESSAGE , FRIEND_REQUEST, SYSTEM_ALERT, NOTIFY
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
   @@index([receiverId, isRead])
+  @@index([type])
   @@map("notifications")
 }
 
 enum NotificationTypeEnum {
   NOTIFY
+  SYSTEM_ALERT
 }
 
 // model RefreshToken {
