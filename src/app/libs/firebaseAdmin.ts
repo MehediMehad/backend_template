@@ -1,15 +1,15 @@
 import admin from 'firebase-admin';
 import { ServiceAccount } from 'firebase-admin';
-import { getEnvVar } from '../helpers/getEnvVar';
+import config from '../../configs';
 
 const serviceAccount: ServiceAccount = {
-  projectId: getEnvVar('FIREBASE_PROJECT_ID'),
-  privateKey: getEnvVar('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n'),
-  clientEmail: getEnvVar('FIREBASE_CLIENT_EMAIL'),
-};
+  clientEmail: config.firebase.clientEmail,
+  privateKey: config.firebase.privateKey,
+  projectId: config.firebase.projectId,
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-export default admin;
+export const fcm = admin.messaging();

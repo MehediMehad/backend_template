@@ -31,8 +31,44 @@ model User {
   messagesSent   Message[]  @relation("sender")
   adminChatRooms ChatRoom[] @relation("admin")
 
+  notificationsSent     Notification[] @relation("sender")
+  notificationsReceived Notification[] @relation("receiver")
+
   @@map("users")
 }
+
+model Notification {
+  id         String               @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String?              @db.ObjectId
+  sender     User?                @relation("sender", fields: [senderId], references: [id])
+  receiverId String               @db.ObjectId
+  receiver   User                 @relation("receiver", fields: [receiverId], references: [id])
+  title      String
+  body       String
+  type       NotificationTypeEnum @default(NOTIFY) // MESSAGE , FRIEND_REQUEST, SYSTEM_ALERT, NOTIFY
+  isRead     Boolean              @default(false)
+  createdAt  DateTime             @default(now())
+
+  @@index([senderId, isRead])
+  @@index([receiverId, isRead])
+  @@map("notifications")
+}
+
+enum NotificationTypeEnum {
+  NOTIFY
+}
+
+// model RefreshToken {
+//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+//   userId    String   @db.ObjectId
+//   user      User     @relation(fields: [userId], references: [id])
+//   token     String   @unique
+//   createdAt DateTime @default(now())
+//   expiresAt DateTime
+
+//   @@index([userId, expiresAt])
+//   @@map("refresh_tokens")
+// }
 
 // Chat Models
 model ChatRoom {
