@@ -5,18 +5,19 @@ import { fcm } from '../../libs/firebaseAdmin';
 import prisma from '../../libs/prisma';
 
 interface ISendPushNotificationPayload {
-  userId: string;
+  isSaveToDb?: boolean;
+  receiverId: string;
   title: string;
   body: string;
   data?: Record<string, string>;
 }
 
 const sendPushNotification = async (payload: ISendPushNotificationPayload) => {
-  const { userId, title, body, data } = payload;
+  const { isSaveToDb = true, receiverId, title, body, data } = payload;
 
   // 1. User fetch
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: receiverId },
     select: {
       id: true,
       fcmTokens: true,
@@ -69,11 +70,25 @@ const sendPushNotification = async (payload: ISendPushNotificationPayload) => {
 
   if (invalidTokens.length > 0) {
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: receiverId },
       data: {
         fcmTokens: {
           set: user.fcmTokens.filter((token) => !invalidTokens.includes(token)),
         },
+      },
+    });
+  }
+
+  // 5. Save notification to DB (if enabled)
+  if (isSaveToDb) {
+    await prisma.notification.create({
+      data: {
+        receiverId,
+        title,
+        body,
+        data: data ?? undefined,
+        type: 'NOTIFY', // enum
+        // senderId: null → system notification
       },
     });
   }
@@ -86,7 +101,7 @@ const sendPushNotification = async (payload: ISendPushNotificationPayload) => {
 
 // Example Use Case
 // await NotificationsServices.sendPushNotification({
-//   userId,
+//   receiverId: user.id,
 //   title: 'Purchase Successful 🎉',
 //   body: `You purchased "${ebook.name}"`,
 //   data: {
