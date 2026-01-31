@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import ApiError from '../../errors/ApiError';
 import { fcm } from '../../libs/firebaseAdmin';
 import prisma from '../../libs/prisma';
+import { NotificationTypeEnum } from '@prisma/client';
 
 interface ISendPushNotificationPayload {
   isSaveToDb?: boolean;
@@ -110,12 +111,13 @@ const sendPushNotification = async (payload: ISendPushNotificationPayload) => {
 // });
 
 interface ISendPushNotificationToAllUsersPayload {
+  isSaveToDb?: boolean;
   title: string;
   body: string;
   data?: Record<string, string>;
 }
 const sendPushNotificationToAllUsers = async (payload: ISendPushNotificationToAllUsersPayload) => {
-  const { title, body, data } = payload;
+  const { isSaveToDb = true, title, body, data } = payload;
 
   // 1. Fetch all users' tokens
   const users = await prisma.user.findMany({
@@ -205,6 +207,22 @@ const sendPushNotificationToAllUsers = async (payload: ISendPushNotificationToAl
         });
       }
     }
+  }
+
+  // 6. Save notifications to DB if enabled
+  if (isSaveToDb) {
+    const notificationsToCreate = userTokenMap.map((user) => ({
+      receiverId: user.userId,
+      title,
+      body,
+      data: data ?? undefined,
+      type: NotificationTypeEnum.NOTIFY,
+      // senderId: null (system)
+    }));
+
+    await prisma.notification.createMany({
+      data: notificationsToCreate,
+    });
   }
 
   return {
