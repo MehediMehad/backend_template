@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
-import { getEnvVar } from '../../helpers/getEnvVar';
 import config from '../../../configs';
+import { getEnvVar } from '../../helpers/getEnvVar';
 
 export const sentEmailUtility = async (
   emailTo: string,

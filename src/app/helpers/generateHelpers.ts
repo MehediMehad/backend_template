@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 // Generate OTP
-const generateOTP = (length: number = 6, expiry: number = 10): { otp: string; expiresAt: Date } => {
+const generateOTP = (expiry: number = 10): { otp: string; expiresAt: Date } => {
   const otp = crypto.randomInt(100000, 999999).toString(); // Example: '123456'
   const expiresAt = new Date(Date.now() + expiry * 60 * 1000); // 10 minutes
   return {

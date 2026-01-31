@@ -1,9 +1,9 @@
 import type { Prisma } from '@prisma/client';
 import { UserRoleEnum, UserStatusEnum } from '@prisma/client';
 
+import config from '../../../configs';
 import prisma from '../../libs/prisma';
 import { authHelpers } from '../authHelpers';
-import config from '../../../configs';
 
 const seedSuperAdmin = async () => {
   try {

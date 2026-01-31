@@ -36,6 +36,12 @@ const registerUser = async (payload: TRegisterPayload) => {
 
   const hashedPassword: string = await authHelpers.hashPassword(payload.password);
 
+  let fcmTokens: string[] = [];
+
+  if (payload.fcmToken) {
+    fcmTokens.push(payload.fcmToken);
+  }
+
   // Create user data
   const CreateUserdata: Prisma.UserCreateInput = {
     name: payload.name,
@@ -45,7 +51,7 @@ const registerUser = async (payload: TRegisterPayload) => {
     role: payload.role,
     phone: payload.phone,
     isVerified: false,
-    fcmToken: payload.fcmToken,
+    fcmTokens: fcmTokens,
     status: 'DEACTIVATE',
   };
 
@@ -56,7 +62,7 @@ const registerUser = async (payload: TRegisterPayload) => {
         data: CreateUserdata,
       });
 
-      const { otp, expiresAt } = generateHelpers.generateOTP(6, 10);
+      const { otp, expiresAt } = generateHelpers.generateOTP(10);
 
       const createOTP = await tx.otp.create({
         data: {
@@ -104,7 +110,7 @@ const loginUser = async (payload: TLoginPayload) => {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { fcmToken: payload.fcmToken, lastLoginAt: new Date() },
+    data: { fcmTokens: { push: payload.fcmToken }, lastLoginAt: new Date() },
   });
 
   const accessToken = authHelpers.createAccessToken({
@@ -178,7 +184,7 @@ const verifyEmail = async (payload: TVerifyPayload) => {
 
       // 3. Create RESET_PASSWORD OTP
       if (payload.type === 'RESET_PASSWORD') {
-        const { expiresAt } = generateHelpers.generateOTP(6, 10);
+        const { expiresAt } = generateHelpers.generateOTP(10);
         await tx.otp.create({
           data: {
             code: accessToken,
@@ -218,7 +224,7 @@ const forgotPassword = async (payload: TForgotPasswordPayload) => {
 
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  const { otp, expiresAt } = generateHelpers.generateOTP(6, 10); // 10 minutes
+  const { otp, expiresAt } = generateHelpers.generateOTP(10); // 10 minutes
 
   await prisma.otp.create({
     data: {
@@ -346,7 +352,7 @@ const resendOtp = async (payload: TResendOtpPayload) => {
 
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  const { otp, expiresAt } = generateHelpers.generateOTP(6, 10);
+  const { otp, expiresAt } = generateHelpers.generateOTP(10);
 
   await prisma.otp.create({
     data: {
