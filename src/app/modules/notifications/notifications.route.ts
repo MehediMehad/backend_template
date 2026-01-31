@@ -1,12 +1,13 @@
-import { Router } from "express";
-import { NotificationsControllers } from "./notifications.controller";
-import validateRequest from "../../middlewares/validateRequest";
-import { NotificationsValidations } from "./notifications.validation";
+import { Router } from 'express';
+
+import { NotificationsControllers } from './notifications.controller';
+import { NotificationsValidations } from './notifications.validation';
+import validateRequest from '../../middlewares/validateRequest';
 
 const router = Router();
 
 router.post(
-  "/send-notification",
+  '/send-notification',
   validateRequest(NotificationsValidations.sendPushNotificationSchema),
   NotificationsControllers.sendPushNotification,
 );

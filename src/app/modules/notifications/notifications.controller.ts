@@ -16,7 +16,6 @@ const sendPushNotification = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 export const NotificationsControllers = {
   sendPushNotification,
 };
