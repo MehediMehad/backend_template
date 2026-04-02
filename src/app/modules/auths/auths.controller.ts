@@ -11,8 +11,8 @@ const registerUserIntoDB = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'User registered successfully. Please check your email to verify.',
-    data: result,
+    message: result.message,
+    data: result.data,
   });
 });
 

@@ -1,4 +1,4 @@
-import { UserStatusEnum, type Prisma } from '@prisma/client';
+import { User, UserStatusEnum, type Prisma } from '@prisma/client';
 import { compare } from 'bcrypt';
 import httpStatus from 'http-status';
 import type { JwtPayload } from 'jsonwebtoken';
@@ -22,16 +22,55 @@ import { ForgotPasswordHtml } from '../../utils/email/ForgotPasswordHtml';
 import { sentEmailUtility } from '../../utils/email/sendEmail.util';
 import { SignUpVerificationHtml } from '../../utils/email/SignUpVerificationHtml';
 
-const registerUser = async (payload: TRegisterPayload) => {
+type TResponse = {
+  data: Partial<User>;
+  message: string;
+}
+
+const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
   // if user already exists
   const isUserExists = await prisma.user.findFirst({
     where: {
       email: payload.email,
     },
+    select: {
+      id: true,
+      email: true,
+      isVerified: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
-  if (isUserExists) {
+  if (isUserExists && isUserExists.isVerified) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
+  }
+
+  if (isUserExists && !isUserExists.isVerified) {
+    const { otp, expiresAt } = generateHelpers.generateOTP(10);
+
+    const createOTP = await prisma.otp.create({
+      data: {
+        code: otp,
+        email: isUserExists.email,
+        type: 'VERIFY_EMAIL',
+        expiresAt,
+      },
+    });
+
+    // Send email in a separate thread
+    void sentEmailUtility(
+      isUserExists.email,
+      'Verify Your Email',
+      SignUpVerificationHtml('Verify Your Email', createOTP.code),
+    );
+
+    return {
+      data: isUserExists,
+      message: 'Please verify your email.',
+    };
   }
 
   const hashedPassword: string = await authHelpers.hashPassword(payload.password);
@@ -60,6 +99,18 @@ const registerUser = async (payload: TRegisterPayload) => {
     async (tx) => {
       const user = await tx.user.create({
         data: CreateUserdata,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          image: true,
+          isVerified: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        }
       });
 
       const { otp, expiresAt } = generateHelpers.generateOTP(10);
@@ -80,16 +131,18 @@ const registerUser = async (payload: TRegisterPayload) => {
         SignUpVerificationHtml('Verify Your Email', createOTP.code),
       );
 
-      const { password: _, ...userResponse } = user;
 
-      return userResponse;
+      return user;
     },
     {
       timeout: 10000, // 10 seconds
     },
   );
 
-  return result;
+  return {
+    data: result,
+    message: 'User registered successfully. Please check your email to verify.',
+  };
 };
 
 const loginUser = async (payload: TLoginPayload) => {
