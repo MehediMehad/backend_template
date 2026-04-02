@@ -11,6 +11,7 @@ import cron from 'node-cron';
 import globalErrorHandler from './app/errors/globalErrorHandler';
 import { getEnvVar } from './app/helpers/getEnvVar';
 import router from './routes';
+import { ProductControllers } from './app/modules/product/product.controller';
 
 // 🔑 Environment Variables
 const NODE_ENV = getEnvVar('NODE_ENV');
@@ -41,6 +42,12 @@ cron.schedule('*/30 * * * *', () => {
     console.error('Event reminder error:', err);
   }
 });
+
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  ProductControllers.handleStripeWebhookEvent
+);
 
 // 🌐 CORS Configuration (support multiple origins)
 app.use(
