@@ -1,7 +1,5 @@
 import nodemailer from 'nodemailer';
-
 import config from '../../../configs';
-import { getEnvVar } from '../../helpers/getEnvVar';
 
 export const sentEmailUtility = async (
   emailTo: string,
@@ -9,19 +7,19 @@ export const sentEmailUtility = async (
   EmailHTML?: string,
 ) => {
   const transporter = nodemailer.createTransport({
-    host: getEnvVar('SMTP_HOST'),
-    port: Number(getEnvVar('SMTP_PORT', '465')),
-    secure: getEnvVar('SMTP_SECURE') === 'true',
+    host: config.smtp.host,
+    port: Number(config.smtp.port),
+    secure: config.smtp.secure,
     auth: {
-      user: getEnvVar('SMTP_EMAIL'),
-      pass: getEnvVar('SMTP_PASS'),
+      user: config.smtp.user,
+      pass: config.smtp.pass,
     },
   });
 
   await transporter.verify(); // 🔍 debug helper
 
   const mailOptions = {
-    from: config.mail.email,
+    from: config.smtp.from,
     to: emailTo,
     subject: EmailSubject,
     html: EmailHTML,
