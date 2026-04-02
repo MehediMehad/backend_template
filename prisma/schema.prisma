@@ -118,6 +118,7 @@ enum ChatRoomType {
   GROUP
 }
 
+// OTP Storage Database
 model Otp {
   id        String      @id @default(auto()) @map("_id") @db.ObjectId
   email     String
