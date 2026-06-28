@@ -7,6 +7,7 @@ export const getEnvVar = (key: string, fallback?: string): string => {
   const value = process.env[key];
 
   if (!value && !fallback) {
+    console.error(`Environment variable ${key} is not set`);
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, `Environment variable ${key} is not set`);
   }
   return value || fallback!;

@@ -8,9 +8,6 @@ dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 const config = {
     app: {
-        name: getEnvVar('APP_NAME'),
-        web_url: getEnvVar('WEB_URL'),
-        app_url: getEnvVar('APP_URL'),
         env: getEnvVar('NODE_ENV'),
         port: getEnvVar('PORT'),
         cors_origins: getEnvVar('CORS_ORIGINS').split(','),
