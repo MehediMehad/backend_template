@@ -1,4 +1,5 @@
-import { User, UserStatusEnum, type Prisma } from '@prisma/client';
+import type { User } from '@prisma/client';
+import { UserStatusEnum, type Prisma } from '@prisma/client';
 import { compare } from 'bcrypt';
 import httpStatus from 'http-status';
 import type { JwtPayload } from 'jsonwebtoken';
@@ -18,14 +19,14 @@ import ApiError from '../../errors/ApiError';
 import { authHelpers } from '../../helpers/authHelpers';
 import { generateHelpers } from '../../helpers/generateHelpers';
 import prisma from '../../libs/prisma';
+import { queueEmail } from '../../queues/email.queue';
 import { ForgotPasswordHtml } from '../../utils/email/ForgotPasswordHtml';
-import { sentEmailUtility } from '../../utils/email/sendEmail.util';
 import { SignUpVerificationHtml } from '../../utils/email/SignUpVerificationHtml';
 
 type TResponse = {
   data: Partial<User>;
   message: string;
-}
+};
 
 const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
   // if user already exists
@@ -60,12 +61,12 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
       },
     });
 
-    // Send email in a separate thread
-    void sentEmailUtility(
-      isUserExists.email,
-      'Verify Your Email',
-      SignUpVerificationHtml('Verify Your Email', createOTP.code),
-    );
+    // Send email via BullMQ queue
+    void queueEmail({
+      emailTo: isUserExists.email,
+      EmailSubject: 'Verify Your Email',
+      EmailHTML: SignUpVerificationHtml('Verify Your Email', createOTP.code),
+    });
 
     return {
       data: isUserExists,
@@ -75,7 +76,7 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
 
   const hashedPassword: string = await authHelpers.hashPassword(payload.password);
 
-  let fcmTokens: string[] = [];
+  const fcmTokens: string[] = [];
 
   if (payload.fcmToken) {
     fcmTokens.push(payload.fcmToken);
@@ -90,7 +91,7 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
     role: payload.role,
     phone: payload.phone,
     isVerified: false,
-    fcmTokens: fcmTokens,
+    fcmTokens,
     status: 'DEACTIVATE',
   };
 
@@ -110,7 +111,7 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
           status: true,
           createdAt: true,
           updatedAt: true,
-        }
+        },
       });
 
       const { otp, expiresAt } = generateHelpers.generateOTP(10);
@@ -124,13 +125,12 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
         },
       });
 
-      // Send email in a separate thread
-      void sentEmailUtility(
-        user.email,
-        'Verify Your Email',
-        SignUpVerificationHtml('Verify Your Email', createOTP.code),
-      );
-
+      // Send email via BullMQ queue
+      void queueEmail({
+        emailTo: user.email,
+        EmailSubject: 'Verify Your Email',
+        EmailHTML: SignUpVerificationHtml('Verify Your Email', createOTP.code),
+      });
 
       return user;
     },
@@ -288,12 +288,12 @@ const forgotPassword = async (payload: TForgotPasswordPayload) => {
     },
   });
 
-  // async email send
-  void sentEmailUtility(
-    payload.email,
-    'Reset Your Password',
-    ForgotPasswordHtml('Reset Password', otp),
-  );
+  // Send email via BullMQ queue
+  void queueEmail({
+    emailTo: payload.email,
+    EmailSubject: 'Reset Your Password',
+    EmailHTML: ForgotPasswordHtml('Reset Password', otp),
+  });
 
   return {
     message: 'Reset password code has been sent to your email',
@@ -416,13 +416,17 @@ const resendOtp = async (payload: TResendOtpPayload) => {
     },
   });
 
-  // async email send
+  // Send email via BullMQ queue
   const html =
     payload.type === 'VERIFY_EMAIL'
       ? SignUpVerificationHtml('Verify Your Email', otp)
       : ForgotPasswordHtml('Reset Your Password', otp);
 
-  void sentEmailUtility(payload.email, 'Your Verification Code', html);
+  void queueEmail({
+    emailTo: payload.email,
+    EmailSubject: 'Your Verification Code',
+    EmailHTML: html,
+  });
 
   return { message: 'A new OTP has been sent to your email.' };
 };

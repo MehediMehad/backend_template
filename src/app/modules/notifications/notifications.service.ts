@@ -1,9 +1,9 @@
+import { NotificationTypeEnum } from '@prisma/client';
 import httpStatus from 'http-status';
 
 import ApiError from '../../errors/ApiError';
 import { fcm } from '../../libs/firebaseAdmin';
 import prisma from '../../libs/prisma';
-import { NotificationTypeEnum } from '@prisma/client';
 
 interface ISendPushNotificationPayload {
   isSaveToDb?: boolean;

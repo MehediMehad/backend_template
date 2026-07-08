@@ -1,15 +1,16 @@
+import type Stripe from 'stripe';
+
 import { stripe } from '../../libs/stripe';
-import Stripe from 'stripe';
 
 const createAppointment = async () => {
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    mode: "payment",
+    payment_method_types: ['card'],
+    mode: 'payment',
     customer_email: `${Date.now()}@gmail.com`,
     line_items: [
       {
         price_data: {
-          currency: "bdt",
+          currency: 'bdt',
           product_data: {
             name: `Programming Hero Book`,
           },
@@ -30,14 +31,13 @@ const createAppointment = async () => {
 };
 
 const handleStripeWebhookEvent = async (event: Stripe.Event) => {
-  console.log("😍😍😍😍", event.type);
+  console.log('😍😍😍😍', event.type);
   switch (event.type) {
-    case "checkout.session.completed": {
+    case 'checkout.session.completed': {
       const session = event.data.object as any;
 
       const bookId = session.metadata?.bookId;
       const paymentId = session.metadata?.paymentId;
-
 
       break;
     }
@@ -45,10 +45,7 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
     default:
       console.log(`ℹ️ Unhandled event type: ${event.type}`);
   }
-
-
 };
-
 
 export const ProductServices = {
   createAppointment,

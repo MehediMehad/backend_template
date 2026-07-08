@@ -140,9 +140,11 @@ npm run worker:start
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `npm run dev` | `tsx watch src/server.ts` | Runs the API server in hot-reload development mode.
+| `npm run dev` | `tsx watch src/server.ts` | Runs the API server in hot-reload development mode. |
+| `npm run worker` | `tsx watch src/worker.ts` | Runs the background worker module in development mode. |
 | `npm run build` | `tsc` | Compiles the TypeScript code into production-ready JavaScript in `/dist`. |
 | `npm run start` | `node ./dist/server.js` | Starts the production server from compiled JavaScript. |
+| `npm run worker:start`| `node ./dist/worker.js` | Starts the production worker process. |
 | `npm run prisma:generate`| `prisma generate` | Generates the Prisma Client. |
 | `npm run prisma:studio` | `prisma studio` | Launches Prisma database browser console. |
 | `npm run lint` | `eslint .` | Runs lint checks on the codebase. |
