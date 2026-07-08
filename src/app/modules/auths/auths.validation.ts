@@ -1,5 +1,14 @@
-import { OtpTypeEnum, UserRoleEnum } from '@prisma/client';
+import { UserRoleEnum } from '@prisma/client';
 import { z } from 'zod';
+
+export enum OtpTypeEnum {
+  LOGIN = 'LOGIN',
+  FORGOT_PASSWORD = 'FORGOT_PASSWORD',
+  VERIFY_EMAIL = 'VERIFY_EMAIL',
+  RESET_PASSWORD = 'RESET_PASSWORD',
+  VERIFY_PHONE = 'VERIFY_PHONE',
+  VERIFY_USER = 'VERIFY_USER',
+}
 
 const passwordSchema = z
   .string()

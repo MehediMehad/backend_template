@@ -19,6 +19,7 @@ import ApiError from '../../errors/ApiError';
 import { authHelpers } from '../../helpers/authHelpers';
 import { generateHelpers } from '../../helpers/generateHelpers';
 import prisma from '../../libs/prisma';
+import { redis } from '../../libs/redis';
 import { queueEmail } from '../../queues/email.queue';
 import { ForgotPasswordHtml } from '../../utils/email/ForgotPasswordHtml';
 import { SignUpVerificationHtml } from '../../utils/email/SignUpVerificationHtml';
@@ -50,22 +51,16 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
   }
 
   if (isUserExists && !isUserExists.isVerified) {
-    const { otp, expiresAt } = generateHelpers.generateOTP(10);
+    const { otp } = generateHelpers.generateOTP(10);
 
-    const createOTP = await prisma.otp.create({
-      data: {
-        code: otp,
-        email: isUserExists.email,
-        type: 'VERIFY_EMAIL',
-        expiresAt,
-      },
-    });
+    // Save to Redis (TTL: 10 minutes = 600 seconds)
+    await redis.setex(`otp:${isUserExists.email}:VERIFY_EMAIL`, 600, otp);
 
     // Send email via BullMQ queue
     void queueEmail({
       emailTo: isUserExists.email,
       EmailSubject: 'Verify Your Email',
-      EmailHTML: SignUpVerificationHtml('Verify Your Email', createOTP.code),
+      EmailHTML: SignUpVerificationHtml('Verify Your Email', otp),
     });
 
     return {
@@ -95,7 +90,7 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
     status: 'DEACTIVATE',
   };
 
-  // transaction
+  // transaction (only User creation since OTP is in Redis now)
   const result = await prisma.$transaction(
     async (tx) => {
       const user = await tx.user.create({
@@ -114,22 +109,16 @@ const registerUser = async (payload: TRegisterPayload): Promise<TResponse> => {
         },
       });
 
-      const { otp, expiresAt } = generateHelpers.generateOTP(10);
+      const { otp } = generateHelpers.generateOTP(10);
 
-      const createOTP = await tx.otp.create({
-        data: {
-          code: otp,
-          email: user.email,
-          type: 'VERIFY_EMAIL',
-          expiresAt,
-        },
-      });
+      // Save to Redis (TTL: 10 minutes = 600 seconds)
+      await redis.setex(`otp:${user.email}:VERIFY_EMAIL`, 600, otp);
 
       // Send email via BullMQ queue
       void queueEmail({
         emailTo: user.email,
         EmailSubject: 'Verify Your Email',
-        EmailHTML: SignUpVerificationHtml('Verify Your Email', createOTP.code),
+        EmailHTML: SignUpVerificationHtml('Verify Your Email', otp),
       });
 
       return user;
@@ -194,19 +183,12 @@ const verifyEmail = async (payload: TVerifyPayload) => {
 
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  const otpRecord = await prisma.otp.findFirst({
-    where: {
-      email: payload.email,
-      code: payload.code,
-      type: payload.type,
-      expiresAt: { gt: new Date() }, // not expired OTP
-    },
-    orderBy: { createdAt: 'desc' }, // newest OTP
-    select: { id: true },
-  });
+  // Verify code from Redis
+  const savedOtp = await redis.get(`otp:${payload.email}:${payload.type}`);
 
-  if (!otpRecord)
+  if (!savedOtp || savedOtp !== payload.code) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid or expired verification code');
+  }
 
   const accessToken = authHelpers.createAccessToken({
     userId: user.id,
@@ -228,24 +210,13 @@ const verifyEmail = async (payload: TVerifyPayload) => {
         select: { id: true, name: true, email: true, role: true, isVerified: true },
       });
 
-      // 2. Delete all OTPs from this email (security + cleanup)
-      await tx.otp.deleteMany({
-        where: {
-          OR: [{ email: payload.email, type: payload.type }, { expiresAt: { lte: new Date() } }],
-        },
-      });
+      // 2. Delete OTP from Redis (security + cleanup)
+      await redis.del(`otp:${payload.email}:${payload.type}`);
 
-      // 3. Create RESET_PASSWORD OTP
+      // 3. Create RESET_PASSWORD reset token in Redis
       if (payload.type === 'RESET_PASSWORD') {
-        const { expiresAt } = generateHelpers.generateOTP(10);
-        await tx.otp.create({
-          data: {
-            code: accessToken,
-            email: payload.email,
-            type: 'RESET_PASSWORD',
-            expiresAt, // 10 minutes
-          },
-        });
+        // Map reset_token -> email for 10 minutes (600 seconds)
+        await redis.setex(`reset_token:${accessToken}`, 600, payload.email);
       }
 
       return user;
@@ -270,23 +241,12 @@ const forgotPassword = async (payload: TForgotPasswordPayload) => {
     where: { email: payload.email },
   });
 
-  // if (!user) {
-  //   // "User not found" is usually not called for security reasons
-  //   throw new ApiError(httpStatus.BAD_REQUEST, 'If email exists, reset link will be sent');
-  // }
-
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  const { otp, expiresAt } = generateHelpers.generateOTP(10); // 10 minutes
+  const { otp } = generateHelpers.generateOTP(10); // 10 minutes
 
-  await prisma.otp.create({
-    data: {
-      email: payload.email,
-      code: otp,
-      type: 'RESET_PASSWORD',
-      expiresAt,
-    },
-  });
+  // Save OTP in Redis (TTL: 10 minutes = 600 seconds)
+  await redis.setex(`otp:${payload.email}:RESET_PASSWORD`, 600, otp);
 
   // Send email via BullMQ queue
   void queueEmail({
@@ -301,16 +261,10 @@ const forgotPassword = async (payload: TForgotPasswordPayload) => {
 };
 
 const resetPassword = async (payload: TResetPasswordPayload) => {
-  const otpRecord = await prisma.otp.findFirst({
-    where: {
-      code: payload.token,
-      type: 'RESET_PASSWORD',
-      expiresAt: { gt: new Date() },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  // Retrieve email mapped to the reset token from Redis
+  const email = await redis.get(`reset_token:${payload.token}`);
 
-  if (!otpRecord) {
+  if (!email) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid or expired token');
   }
 
@@ -318,17 +272,12 @@ const resetPassword = async (payload: TResetPasswordPayload) => {
 
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
-      where: { email: otpRecord.email },
+      where: { email },
       data: { password: hashedPassword },
     });
 
-    // Delete all RESET_PASSWORD OTPs from this email
-    await tx.otp.deleteMany({
-      where: {
-        email: otpRecord.email,
-        type: 'RESET_PASSWORD',
-      },
-    });
+    // Delete the reset token from Redis
+    await redis.del(`reset_token:${payload.token}`);
   });
 
   return { message: 'Password reset successful' };
@@ -398,23 +347,12 @@ const resendOtp = async (payload: TResendOtpPayload) => {
     where: { email: payload.email },
   });
 
-  // if (!user) {
-  //   // Security: user না থাকলেও success message দাও (enumeration prevent)
-  //   return { message: 'If the email exists, a new OTP has been sent.' };
-  // }
-
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  const { otp, expiresAt } = generateHelpers.generateOTP(10);
+  const { otp } = generateHelpers.generateOTP(10);
 
-  await prisma.otp.create({
-    data: {
-      code: otp,
-      email: payload.email,
-      type: payload.type,
-      expiresAt,
-    },
-  });
+  // Save OTP in Redis (TTL: 10 minutes = 600 seconds)
+  await redis.setex(`otp:${payload.email}:${payload.type}`, 600, otp);
 
   // Send email via BullMQ queue
   const html =
@@ -431,6 +369,11 @@ const resendOtp = async (payload: TResendOtpPayload) => {
   return { message: 'A new OTP has been sent to your email.' };
 };
 
+const logout = async (token: string) => {
+  // Blacklist the token in Redis for 24 hours (86400 seconds)
+  await redis.setex(`blacklist:${token}`, 86400, 'true');
+};
+
 export const AuthsServices = {
   registerUser,
   loginUser,
@@ -441,4 +384,5 @@ export const AuthsServices = {
   getMe,
   refreshToken,
   resendOtp,
+  logout,
 };

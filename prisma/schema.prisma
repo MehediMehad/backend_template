@@ -118,29 +118,6 @@ enum ChatRoomType {
   GROUP
 }
 
-// OTP Storage Database
-model Otp {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  email     String
-  code      String
-  type      OtpTypeEnum //  VERIFY_EMAIL, RESET_PASSWORD, VERIFY_PHONE,
-  createdAt DateTime    @default(now())
-  expiresAt DateTime
-
-  @@unique([email, code, type])
-  @@index([email, type, expiresAt])
-  @@map("opts")
-}
-
-// Enums
-enum OtpTypeEnum {
-  LOGIN
-  FORGOT_PASSWORD
-  VERIFY_EMAIL
-  RESET_PASSWORD
-  VERIFY_PHONE
-  VERIFY_USER
-}
 
 enum UserRoleEnum {
   USER

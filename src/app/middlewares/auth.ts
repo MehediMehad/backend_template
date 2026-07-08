@@ -10,6 +10,7 @@ import ApiError from '../errors/ApiError';
 import type { TAccessTokenPayload } from '../helpers/authHelpers';
 import { authHelpers } from '../helpers/authHelpers';
 import prisma from '../libs/prisma';
+import { redis } from '../libs/redis';
 
 const auth =
   (...roles: UserRoleEnum[]) =>
@@ -19,6 +20,11 @@ const auth =
 
       if (!token) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+      }
+
+      const isBlacklisted = await redis.get(`blacklist:${token}`);
+      if (isBlacklisted) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, 'Token has been revoked!');
       }
 
       const verifiedUser = authHelpers.verifyAccessToken(token);

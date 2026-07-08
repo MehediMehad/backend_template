@@ -109,6 +109,29 @@ const resendOtpIntoDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const logoutUser = catchAsync(async (req: Request, res: Response) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
+  }
+
+  await AuthsServices.logout(token);
+
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Logged out successfully',
+  });
+});
+
 export const AuthsControllers = {
   registerUserIntoDB,
   loginUserIntoDB,
@@ -119,4 +142,5 @@ export const AuthsControllers = {
   changePasswordIntoDB,
   refreshTokenIntoDB,
   resendOtpIntoDB,
+  logoutUser,
 };

@@ -66,11 +66,6 @@ router.post(
   AuthsControllers.resendOtpIntoDB,
 );
 
-// // Optional: Logout (if you want to implement token blacklisting)
-// router.post(
-//   '/logout',
-//   auth(),
-//   AuthsControllers.logout,                // you'll need to add this later
-// );
+router.post('/logout', auth('ADMIN', 'MODERATOR', 'USER'), AuthsControllers.logoutUser);
 
 export const AuthsRoutes = router;
