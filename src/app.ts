@@ -29,7 +29,6 @@ if (NODE_ENV === 'development') {
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(cookieParser());
 
-
 app.post(
   '/webhook',
   express.raw({ type: 'application/json' }),
