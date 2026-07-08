@@ -6,7 +6,6 @@ import type { Application, NextFunction, Request, Response } from 'express';
 import express from 'express';
 import httpStatus from 'http-status';
 import morgan from 'morgan';
-import cron from 'node-cron';
 
 import globalErrorHandler from './app/errors/globalErrorHandler';
 import { getEnvVar } from './app/helpers/getEnvVar';
@@ -30,18 +29,6 @@ if (NODE_ENV === 'development') {
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(cookieParser());
 
-// 🚀 Cron Job Every 30 Minutes
-cron.schedule('*/30 * * * *', () => {
-  console.log('🧵 Cron job running every 30 minutes');
-  try {
-    // EventsServices.eventReminder();
-    // EventsServices.eventCompleted();
-    // SubscriptionsServices.expireSubscriptions();
-    console.log('🧵 Cron job completed');
-  } catch (err) {
-    console.error('Event reminder error:', err);
-  }
-});
 
 app.post(
   '/webhook',
