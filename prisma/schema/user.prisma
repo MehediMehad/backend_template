@@ -1,0 +1,40 @@
+model User {
+  id       String         @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  image    String
+  email    String         @unique
+  phone    String
+  password String
+  role     UserRoleEnum   @default(USER)
+  status   UserStatusEnum @default(DEACTIVATE)
+
+  fcmTokens   String[] // Push 🔔 multiple device support
+  isVerified  Boolean   @default(false)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Chat Relations
+  chatRooms      ChatRoom[] @relation("ChatRoomUsers", fields: [chatRoomIds], references: [id])
+  chatRoomIds    String[]   @db.ObjectId
+  messagesSent   Message[]  @relation("sender")
+  adminChatRooms ChatRoom[] @relation("admin")
+
+  // Notification Relations
+  notificationsSent     Notification[] @relation("sender")
+  notificationsReceived Notification[] @relation("receiver")
+
+  @@map("users")
+}
+
+enum UserRoleEnum {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum UserStatusEnum {
+  DEACTIVATE
+  ACTIVE
+  BLOCKED
+}

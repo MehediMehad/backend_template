@@ -19,7 +19,7 @@ export default tseslint.config(
       'coverage/**',
       'logs/**',
       'socket-tests/**',
-      // 'scripts/**/*',
+      'prisma.config.ts',
     ],
   },
 
