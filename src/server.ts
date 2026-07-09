@@ -1,15 +1,12 @@
 import type { Server as HttpServer } from 'http';
 
-import { Server as SocketIOServer } from 'socket.io';
-
 import app from './app';
 import seedSuperAdmin from './app/helpers/db/seedSuperAdmin';
 import { getLocalIP } from './app/helpers/devHelpers';
+import { initializeSocket } from './app/libs/socket';
 import config from './configs';
-// import { initializeSocket } from './app/modules/chat/chat.socket';
 
 let server: HttpServer;
-let io: SocketIOServer;
 
 async function main() {
   try {
@@ -21,15 +18,9 @@ async function main() {
       getLocalIP(); // 🖥️ Your PC's local IPv4 address(es)
 
       // Initialize Socket.IO
-      io = new SocketIOServer(server, {
-        cors: {
-          origin: '*', // Adjust based on your frontend URL
-          methods: ['GET', 'POST'],
-        },
-      });
-
-      // Pass io to socket handler
-      // initializeSocket(io);
+      const io = initializeSocket(server);
+      global.io = io;
+      console.log('✅ Socket.io initialized');
     });
 
     // 🔐 Handle Uncaught Exceptions

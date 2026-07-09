@@ -94,6 +94,7 @@ To run Redis locally, you can choose one of the following methods:
     sudo apt update
     sudo apt install redis-server
     sudo service redis-server start
+    redis-cli ping
     ```
   - **Method B (Native Windows Port):**
     1. Download the pre-compiled zip/msi installer from [tporadowski/redis GitHub Releases](https://github.com/tporadowski/redis/releases).
