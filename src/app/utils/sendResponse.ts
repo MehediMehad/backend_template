@@ -4,7 +4,9 @@ type TMeta = {
   limit: number;
   page: number;
   total: number;
-  totalPages: number;
+  totalPages?: number;
+  totalPage?: number;
+  unreadCount?: number;
 };
 
 type TResponse<T> = {

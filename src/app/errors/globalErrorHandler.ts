@@ -1,8 +1,4 @@
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientUnknownRequestError,
-  PrismaClientValidationError,
-} from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 
@@ -67,16 +63,16 @@ const globalErrorHandler = (
       meta: err.meta,
       stack: err.stack,
     };
-  } else if (err instanceof PrismaClientValidationError) {
+  } else if (err instanceof Prisma.PrismaClientValidationError) {
     const prismaError = handlePrismaValidationError(err);
     statusCode = prismaError.statusCode;
     message = prismaError.message;
     errorDetails = prismaError.errorDetails;
-  } else if (err instanceof PrismaClientKnownRequestError) {
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     statusCode = 400;
     message = err.message;
     errorDetails = { code: err.code, meta: err.meta };
-  } else if (err instanceof PrismaClientUnknownRequestError) {
+  } else if (err instanceof Prisma.PrismaClientUnknownRequestError) {
     statusCode = 500;
     message = err.message;
     errorDetails = err;

@@ -9,7 +9,6 @@ import morgan from 'morgan';
 
 import globalErrorHandler from './app/errors/globalErrorHandler';
 import { getEnvVar } from './app/helpers/getEnvVar';
-import { ProductControllers } from './app/modules/product/product.controller';
 import router from './routes';
 
 // 🔑 Environment Variables
@@ -28,12 +27,6 @@ if (NODE_ENV === 'development') {
 // 📁 Static Files For CSS
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(cookieParser());
-
-app.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  ProductControllers.handleStripeWebhookEvent,
-);
 
 // 🌐 CORS Configuration (support multiple origins)
 app.use(

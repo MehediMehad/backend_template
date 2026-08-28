@@ -1,3 +1,4 @@
+import type { NotificationType } from '@prisma/client';
 import { Queue } from 'bullmq';
 
 import { queueConnection } from '../libs/queueConnection';
@@ -9,6 +10,7 @@ export interface INotificationJobData {
   title: string;
   body: string;
   data?: Record<string, string>;
+  notificationType?: NotificationType;
 }
 
 export const notificationQueueName = 'NotificationQueue';

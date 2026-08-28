@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@prisma/client';
+import { UserRoleEnum, DeviceType } from '@prisma/client';
 import { z } from 'zod';
 
 export enum OtpTypeEnum {
@@ -24,20 +24,28 @@ export const registerSchema = z.object({
     .string()
     .min(2, 'Name must be at least 2 characters')
     .max(50, 'Name must be at most 50 characters'),
-  image: z.string().url('Image must be a valid URL'),
+  image: z.string().url('Image must be a valid URL').optional(),
   email: z.string().email('Invalid email address').trim().toLowerCase(),
-  phone: z
-    .string()
-    .regex(/^(?:\+8801|01)[3-9]\d{8}$/, 'Please enter a valid Bangladeshi phone number'),
   password: passwordSchema,
-  role: z.nativeEnum(UserRoleEnum),
+  role: z.nativeEnum(UserRoleEnum).default(UserRoleEnum.USER),
+  deviceId: z.string().optional(),
+  deviceName: z.string().optional(),
+  deviceType: z.nativeEnum(DeviceType).optional(),
   fcmToken: z.string().optional(),
 });
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address').trim().toLowerCase(),
   password: z.string().min(6, 'Password is required'),
+  deviceId: z.string().optional(),
+  deviceName: z.string().optional(),
+  deviceType: z.nativeEnum(DeviceType).optional(),
   fcmToken: z.string().optional(),
+});
+
+export const confirmPendingLoginSchema = z.object({
+  pendingToken: z.string().min(1, 'pendingToken is required'),
+  logoutDeviceId: z.string().min(1, 'logoutDeviceId is required'),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -45,7 +53,8 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(4, 'Invalid or missing token'),
+  email: z.string().email('Invalid email address').trim().toLowerCase(),
+  code: z.string().length(6, 'OTP must be 6 digits'),
   newPassword: passwordSchema,
 });
 
@@ -68,6 +77,7 @@ export const resendOtpSchema = z.object({
 export const AuthsValidations = {
   registerSchema,
   loginSchema,
+  confirmPendingLoginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,

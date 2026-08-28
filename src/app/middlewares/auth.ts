@@ -4,17 +4,16 @@ import type { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
 import type { JwtPayload } from 'jsonwebtoken';
 
+import config from '../../configs';
 import ApiError from '../errors/ApiError';
-// import type { TAuthPayload } from '../helpers/jwtHelpers';
-// import { jwtHelpers } from '../helpers/jwtHelpers';
-import type { TAccessTokenPayload } from '../helpers/authHelpers';
-import { authHelpers } from '../helpers/authHelpers';
+import type { TAccessTokenPayload } from '../interface';
 import prisma from '../libs/prisma';
 import { redis } from '../libs/redis';
+import { verifyToken } from '../utils/token';
 
 const auth =
   (...roles: UserRoleEnum[]) =>
-  async (req: Request & { user?: TAccessTokenPayload }, _res: Response, next: NextFunction) => {
+  async (req: Request, _res: Response, next: NextFunction) => {
     try {
       const token = req.headers.authorization?.split(' ')[1];
 
@@ -27,9 +26,12 @@ const auth =
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Token has been revoked!');
       }
 
-      const verifiedUser = authHelpers.verifyAccessToken(token);
+      const verifiedUser = verifyToken<JwtPayload & TAccessTokenPayload>(
+        token,
+        config.jwt.access_secret,
+      );
 
-      if (!verifiedUser?.email) {
+      if (!verifiedUser || !verifiedUser.userId || !verifiedUser.email) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized!');
       }
       const { userId } = verifiedUser;
@@ -48,17 +50,13 @@ const auth =
       }
 
       if (user.status === UserStatusEnum.DEACTIVATE) {
-        throw new ApiError(httpStatus.FORBIDDEN, 'Your account is not Activate!');
+        throw new ApiError(httpStatus.FORBIDDEN, 'Your account is not active!');
       }
 
-      // if (user.isDeleted) {
-      //   throw new ApiError(httpStatus.FORBIDDEN, 'Your account is deleted!');
-      // }
-
-      req.user = verifiedUser as JwtPayload & TAccessTokenPayload;
+      req.user = verifiedUser;
 
       if (roles.length && !roles.includes(user.role)) {
-        throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+        throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden: Insufficient permissions');
       }
 
       next();

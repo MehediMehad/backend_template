@@ -1,0 +1,400 @@
+{
+	"info": {
+		"_postman_id": "auth-device-management-api",
+		"name": "Auth & Device Management API",
+		"description": "Production-level Authentication, Device Management & FCM Notification Postman Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pendingToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{ "key": "name", "value": "Mehedi Hasan", "type": "text" },
+								{ "key": "email", "value": "user@example.com", "type": "text" },
+								{ "key": "password", "value": "Pass@12345", "type": "text" },
+								{ "key": "role", "value": "USER", "type": "text" },
+								{ "key": "deviceId", "value": "device_web_001", "type": "text" },
+								{ "key": "deviceName", "value": "Chrome on Windows", "type": "text" },
+								{ "key": "deviceType", "value": "WEB", "type": "text" },
+								{ "key": "fcmToken", "value": "sample_fcm_token_123", "type": "text" },
+								{ "key": "image", "type": "file", "src": [] }
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.accessToken) {",
+									"    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+									"}",
+									"if (jsonData.data && jsonData.data.refreshToken) {",
+									"    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+									"}",
+									"if (jsonData.data && jsonData.data.pendingToken) {",
+									"    pm.collectionVariables.set('pendingToken', jsonData.data.pendingToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Pass@12345\",\n  \"deviceId\": \"device_web_001\",\n  \"deviceName\": \"Chrome on Windows\",\n  \"deviceType\": \"WEB\",\n  \"fcmToken\": \"sample_fcm_token_123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh-token"]
+						}
+					}
+				},
+				{
+					"name": "Logout Current Device",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						}
+					}
+				},
+				{
+					"name": "Logout All Devices",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout-all",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout-all"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Device Management",
+			"item": [
+				{
+					"name": "Get Active Devices",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "devices"]
+						}
+					}
+				},
+				{
+					"name": "Confirm Pending Device Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.accessToken) {",
+									"    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pendingToken\": \"{{pendingToken}}\",\n  \"logoutDeviceId\": \"target_device_id_to_logout\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/device-login/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "device-login", "confirm"]
+						}
+					}
+				},
+				{
+					"name": "Logout Specific Device",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/devices/:deviceId",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "devices", ":deviceId"],
+							"variable": [
+								{
+									"key": "deviceId",
+									"value": "target_device_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Password & OTP Management",
+			"item": [
+				{
+					"name": "Verify Email OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"code\": \"123456\",\n  \"type\": \"VERIFY_EMAIL\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify"]
+						}
+					}
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"type\": \"VERIFY_EMAIL\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/resend-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "resend-otp"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"NewPass@12345\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oldPassword\": \"Pass@12345\",\n  \"newPassword\": \"NewPass@12345\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "change-password"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Notifications",
+			"item": [
+				{
+					"name": "Save / Update FCM Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fcmToken\": \"new_sample_fcm_token_789\",\n  \"deviceId\": \"device_web_001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/notifications/fcm-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications", "fcm-token"]
+						}
+					}
+				},
+				{
+					"name": "Get My Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"]
+						}
+					}
+				},
+				{
+					"name": "Mark All Notifications as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/read-all",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications", "read-all"]
+						}
+					}
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{accessToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/:id/read",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications", ":id", "read"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "notification_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

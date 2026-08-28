@@ -1,10 +1,12 @@
-import path from 'path';
-import dotenv from 'dotenv';
-import { defineConfig } from 'prisma/config';
-
-// Load environment variables from .env file
-dotenv.config({ path: path.join(process.cwd(), '.env') });
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
 
 export default defineConfig({
-  schema: 'prisma/schema',
+  schema: './prisma/schema',
+  migrations: {
+    path: './prisma/schema/migrations',
+  },
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
 });

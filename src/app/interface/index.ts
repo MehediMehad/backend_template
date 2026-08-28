@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-namespace */
+import { UserRoleEnum } from '@prisma/client';
 import type { JwtPayload } from 'jsonwebtoken';
 
-import type { TAccessTokenPayload } from '../helpers/authHelpers';
+export interface TAccessTokenPayload {
+  userId: string;
+  email: string;
+  role: UserRoleEnum;
+  deviceId?: string;
+  iat?: number;
+  exp?: number;
+}
 
 declare global {
   namespace Express {

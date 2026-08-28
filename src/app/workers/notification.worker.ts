@@ -2,14 +2,14 @@ import type { Job } from 'bullmq';
 import { Worker } from 'bullmq';
 
 import { queueConnection } from '../libs/queueConnection';
-import { NotificationsServices } from '../modules/notifications/notifications.service';
+import { NotificationServices } from '../modules/notification/notification.service';
 import type { INotificationJobData } from '../queues/notification.queue';
 import { notificationQueueName } from '../queues/notification.queue';
 
 export const notificationWorker = new Worker<INotificationJobData>(
   notificationQueueName,
   async (job: Job<INotificationJobData>) => {
-    const { type, isSaveToDb, receiverId, title, body, data } = job.data;
+    const { type, isSaveToDb, receiverId, title, body, data, notificationType } = job.data;
     console.log(`🔔 [NotificationWorker] Processing job ${job.id} - type: ${type}`);
 
     try {
@@ -17,15 +17,16 @@ export const notificationWorker = new Worker<INotificationJobData>(
         if (!receiverId) {
           throw new Error('receiverId is required for SINGLE notifications');
         }
-        await NotificationsServices.sendPushNotification({
+        await NotificationServices.sendPushNotification({
           receiverId,
           title,
           body,
           data,
           isSaveToDb,
+          notificationType,
         });
       } else {
-        await NotificationsServices.sendPushNotificationToAllUsers({
+        await NotificationServices.sendPushNotificationToAllUsers({
           title,
           body,
           data,

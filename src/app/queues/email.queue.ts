@@ -3,8 +3,11 @@ import { Queue } from 'bullmq';
 import { queueConnection } from '../libs/queueConnection';
 
 export interface IEmailJobData {
-  emailTo: string;
-  EmailSubject: string;
+  to?: string;
+  subject?: string;
+  html?: string;
+  emailTo?: string;
+  EmailSubject?: string;
   EmailHTML?: string;
 }
 
@@ -24,5 +27,10 @@ export const emailQueue = new Queue<IEmailJobData>(emailQueueName, {
 });
 
 export const queueEmail = async (data: IEmailJobData) => {
-  await emailQueue.add(`send-email-${data.emailTo}-${Date.now()}`, data);
+  const targetEmail = data.to || data.emailTo || '';
+  await emailQueue.add(`send-email-${targetEmail}-${Date.now()}`, {
+    emailTo: targetEmail,
+    EmailSubject: data.subject || data.EmailSubject || '',
+    EmailHTML: data.html || data.EmailHTML || '',
+  });
 };

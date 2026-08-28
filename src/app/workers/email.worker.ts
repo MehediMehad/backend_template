@@ -12,8 +12,12 @@ export const emailWorker = new Worker<IEmailJobData>(
     const { emailTo, EmailSubject, EmailHTML } = job.data;
     console.log(`✉️ [EmailWorker] Processing job ${job.id} - sending email to ${emailTo}`);
 
+    if (!emailTo) {
+      throw new Error('emailTo is required to send email');
+    }
+
     try {
-      await sentEmailUtility(emailTo, EmailSubject, EmailHTML);
+      await sentEmailUtility(emailTo, EmailSubject || '', EmailHTML);
       console.log(`✅ [EmailWorker] Job ${job.id} processed successfully`);
     } catch (error) {
       console.error(`❌ [EmailWorker] Job ${job.id} failed to send email:`, error);

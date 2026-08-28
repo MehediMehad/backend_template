@@ -1,40 +1,88 @@
 model User {
-  id       String         @id @default(auto()) @map("_id") @db.ObjectId
+  id       String         @id @default(uuid())
   name     String
   image    String
   email    String         @unique
-  phone    String
   password String
   role     UserRoleEnum   @default(USER)
   status   UserStatusEnum @default(DEACTIVATE)
 
-  fcmTokens   String[] // Push 🔔 multiple device support
   isVerified  Boolean   @default(false)
-  lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Chat Relations
-  chatRooms      ChatRoom[] @relation("ChatRoomUsers", fields: [chatRoomIds], references: [id])
-  chatRoomIds    String[]   @db.ObjectId
-  messagesSent   Message[]  @relation("sender")
-  adminChatRooms ChatRoom[] @relation("admin")
-
-  // Notification Relations
-  notificationsSent     Notification[] @relation("sender")
-  notificationsReceived Notification[] @relation("receiver")
-
+  // Relations
+  devices Device[]
+  @@index([name])
   @@map("users")
+}
+
+
+model Device {
+  id          String   @id @default(cuid())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  deviceId    String
+  deviceName  String?
+  deviceType  DeviceType?
+
+  browser     String?
+  os          String?
+
+  ipAddress   String?
+
+  fcmToken    String?
+
+  isActive    Boolean  @default(true)
+
+  lastActiveAt DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@map("devices")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      NotificationType @default(SYSTEM)
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
 
 enum UserRoleEnum {
   USER
   ADMIN
-  MODERATOR
 }
 
 enum UserStatusEnum {
   DEACTIVATE
   ACTIVE
   BLOCKED
+}
+
+enum DeviceType {
+  WEB
+  ANDROID
+  IOS
+}
+
+enum NotificationType {
+  SYSTEM
+  ORDER
+  PAYMENT
+  SECURITY
+  MESSAGE
 }

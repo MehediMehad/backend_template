@@ -1,8 +1,7 @@
 /* eslint-disable no-useless-escape */
+import type { Prisma } from '@prisma/client';
 
-import type { PrismaClientValidationError } from '@prisma/client/runtime/library';
-
-const handlePrismaValidationError = (err: PrismaClientValidationError) => {
+const handlePrismaValidationError = (err: Prisma.PrismaClientValidationError) => {
   let field: string | null = null;
   let expectedType: string | null = null;
   let providedType: string | null = null;
