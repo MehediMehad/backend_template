@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-namespace */
-import { UserRoleEnum } from '@prisma/client';
+import type { UserRoleEnum } from '@prisma/client';
 import type { JwtPayload } from 'jsonwebtoken';
 
 export interface TAccessTokenPayload {

@@ -8,17 +8,13 @@ import {
   loginLimiter,
   resendOtpLimiter,
 } from '../../middlewares/rateLimiter';
-import { fileUploader } from '../../middlewares/s3MulterMiddleware';
 import validateRequest from '../../middlewares/validateRequest';
 
 const router = Router();
 
 router.post(
   '/register',
-  fileUploader.uploadFields,
-  validateRequest(AuthsValidations.registerSchema, {
-    image: 'single',
-  }),
+  validateRequest(AuthsValidations.registerSchema),
   AuthControllers.registerUserIntoDB,
 );
 

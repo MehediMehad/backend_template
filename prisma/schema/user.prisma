@@ -13,6 +13,7 @@ model User {
 
   // Relations
   devices Device[]
+  fileUploads FileUpload[]
   @@index([name])
   @@map("users")
 }

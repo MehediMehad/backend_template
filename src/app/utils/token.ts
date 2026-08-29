@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@prisma/client';
+import type { UserRoleEnum } from '@prisma/client';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 import jwt from 'jsonwebtoken';
 
